@@ -1,8 +1,9 @@
-import app from "../src/app";
-import { config } from "../src/config/config";
-import { connectDB } from "../src/db/index";
+import app from "./src/app";
+import { config } from "./src/config/config";
+import { connectDB } from "./src/db/index";
 const startServer = () => {
   const port = config.port || 8080;
+
   connectDB()
     .then(() =>
       app.listen(port, () => {
