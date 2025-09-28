@@ -3,6 +3,7 @@ import createHttpError from "http-errors";
 import { emailRegex } from "../utils/regex.js";
 import userModel from "./user.model.js";
 import { response } from "../utils/responseTemplate.js";
+import { asyncHandler } from "../utils/asynchandler.js";
 export const registerUser = async (
   req: Request,
   res: Response,
@@ -45,3 +46,32 @@ export const registerUser = async (
   }
   res.status(201).json(response("User registerd successfully", createdUser));
 };
+
+export const getUsers = asyncHandler(async (req: Request, res: Response) => {
+  const { fullName, email } = req.query;
+  let users;
+  if (fullName || email) {
+    const query: any = {};
+    if (fullName || email) {
+      query.$or = [];
+      if (fullName) {
+        query.$or.push({ fullName: { $regex: fullName, $options: "i" } });
+      }
+      if (email) {
+        query.$or.push({ email: { $regex: email, $options: "i" } });
+      }
+    }
+
+    users = await userModel.find(query);
+
+    if (!users || users.length === 0) {
+      return res.status(200).json(response("No users found", []));
+    }
+    res.status(201).json(response("User Found Successfully", users));
+  } else {
+    users = await userModel.find({}).select("-password -refreshToken");
+    return res
+      .status(200)
+      .json(response("All users fetched successfully", users));
+  }
+});
