@@ -44,9 +44,13 @@ export const registerUser = async (
     const error = createHttpError(500, "Something went wrong please try again");
     return next(error);
   }
-  res.status(201).json(response("User registerd successfully", createdUser));
+  res
+    .status(201)
+    .json(response(true, "User registerd successfully", createdUser));
 };
-
+export const loginUser = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+});
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email } = req.query;
   let users;
@@ -65,13 +69,13 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
     users = await userModel.find(query);
 
     if (!users || users.length === 0) {
-      return res.status(200).json(response("No users found", []));
+      return res.status(200).json(response(false, "No users found", []));
     }
-    res.status(201).json(response("User Found Successfully", users));
+    res.status(201).json(response(true, "User Found Successfully", users));
   } else {
     users = await userModel.find({}).select("-password -refreshToken");
     return res
       .status(200)
-      .json(response("All users fetched successfully", users));
+      .json(response(true, "All users fetched successfully", users));
   }
 });

@@ -1,6 +1,10 @@
-export const response = (message: string, result: any) => {
+export const response = (
+  status: boolean,
+  message: string,
+  result: any,
+) => {
   return {
-    status: true,
+    status: status || true,
     message: message,
     result: result,
   };
