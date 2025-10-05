@@ -4,6 +4,28 @@ import { emailRegex } from "../utils/regex.js";
 import userModel from "./user.model.js";
 import { response } from "../utils/responseTemplate.js";
 import { asyncHandler } from "../utils/asynchandler.js";
+import { options } from "../constant.js";
+const generateAccessAndRefreshToken = async (
+  userId: string,
+  next: NextFunction
+) => {
+  try {
+    const user = await userModel.findById(userId);
+    const accessToken = await user?.generateAccesstoken();
+    const refreshToken = await user?.generateRefreshToken();
+    if (user) {
+      user["refreshToken"] = refreshToken || "";
+    }
+    await user?.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (err) {
+    const error = createHttpError(
+      500,
+      "Something went wrong while generating token"
+    );
+    return next(error);
+  }
+};
 export const registerUser = async (
   req: Request,
   res: Response,
@@ -48,9 +70,50 @@ export const registerUser = async (
     .status(201)
     .json(response(true, "User registerd successfully", createdUser));
 };
-export const loginUser = asyncHandler(async (req: Request, res: Response) => {
-  const { email } = req.body;
-});
+export const loginUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
+    if (!(email || password)) {
+      const error = createHttpError(400, "Email and password is required");
+      return next(error);
+    }
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      const error = createHttpError(400, "User does not exist");
+      return next(error);
+    }
+    if (!user.isActive) {
+      const error = createHttpError(400, "User is not active");
+      return next(error);
+    }
+    const isPasswordValid = await user.isPasswordCorrect(password);
+    if (!isPasswordValid) {
+      const error = createHttpError(400, "Invalid Credentials");
+      return next(error);
+    }
+    const token = await generateAccessAndRefreshToken(user?._id, next);
+    if (token) {
+      const { accessToken, refreshToken } = token;
+      const loggedinUser = await userModel
+        .findById(user?._id)
+        .select("-password -refreshToken");
+      res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken)
+        .json(
+          response(true, "User logged in successfully", {
+            userDetails: loggedinUser,
+            accessToken,
+            refreshToken,
+          })
+        );
+    } else {
+      const error = createHttpError(400, "Something went wrong.");
+      return next(error);
+    }
+  }
+);
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email } = req.query;
   let users;
