@@ -5,6 +5,7 @@ import userModel from "./user.model.js";
 import { response } from "../utils/responseTemplate.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { options } from "../constant.js";
+import { CustomRequest } from "../types.js";
 const generateAccessAndRefreshToken = async (
   userId: string,
   next: NextFunction
@@ -112,6 +113,26 @@ export const loginUser = asyncHandler(
       const error = createHttpError(400, "Something went wrong.");
       return next(error);
     }
+  }
+);
+export const logoutUser = asyncHandler(
+  async (req: CustomRequest, res: Response) => {
+    await userModel.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: { refreshtoken: undefined },
+      },
+      { new: true }
+    );
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json(response(true, "User Logged Out", {}));
   }
 );
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {

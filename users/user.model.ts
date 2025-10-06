@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema<User>(
     },
     googleId: {
       type: String,
+      default: null,
     },
     avatar: {
       type: String,
