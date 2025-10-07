@@ -135,6 +135,7 @@ export const logoutUser = asyncHandler(
       .json(response(true, "User Logged Out", {}));
   }
 );
+export const refreshAccessToken = asyncHandler(async () => {});
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email } = req.query;
   let users;
