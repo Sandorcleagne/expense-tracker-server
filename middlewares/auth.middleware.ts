@@ -15,10 +15,17 @@ export const verifyJwt = asyncHandler(
         const error = createHttpError(401, "Unauthorized Request");
         return next(error);
       }
-      const decodedToken = jwt.verify(
-        incomingToken,
-        config?.ACCESS_TOKEN_SECRETE
-      ) as JwtPayload;
+      let decodedToken;
+
+      try {
+        decodedToken = jwt.verify(
+          incomingToken,
+          config?.ACCESS_TOKEN_SECRETE
+        ) as JwtPayload;
+      } catch (err) {
+        const error = createHttpError(403, "token is expired");
+        next(error);
+      }
       const user = await userModel
         .findById(decodedToken?._id)
         .select("-password -refreshToken");

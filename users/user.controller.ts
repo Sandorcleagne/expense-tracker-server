@@ -6,6 +6,8 @@ import { response } from "../utils/responseTemplate.js";
 import { asyncHandler } from "../utils/asynchandler.js";
 import { options } from "../constant.js";
 import { CustomRequest } from "../types.js";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { config } from "../config/config.js";
 const generateAccessAndRefreshToken = async (
   userId: string,
   next: NextFunction
@@ -136,7 +138,51 @@ export const logoutUser = asyncHandler(
   }
 );
 export const refreshAccessToken = asyncHandler(
-  async (req: Request, res: Response) => {}
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const incomingRefreshToken =
+        req?.cookies?.refreshToken || req.body.refreshToken;
+      if (!incomingRefreshToken) {
+        const error = createHttpError(401, "Unauthorized Request");
+        return next(error);
+      }
+      let decodedToken;
+
+      decodedToken = jwt.verify(
+        incomingRefreshToken,
+        config?.REFRESH_TOKEN_SECRETE
+      ) as JwtPayload;
+
+      const user = await userModel
+        .findById(decodedToken?._id)
+        .select("+refreshtoken");
+      if (!user) {
+        const error = createHttpError(403, "Invalid Refresh Token");
+        return next(error);
+      }
+      if (incomingRefreshToken !== user?.refreshToken) {
+        const error = createHttpError(403, "Refresh token is expired or used.");
+        return next(error);
+      }
+      const token = await generateAccessAndRefreshToken(user._id, next);
+      if (token) {
+        const { accessToken, refreshToken } = token;
+        res
+          .status(200)
+          .cookie("accessToken", accessToken, options)
+          .cookie("refreshToken", refreshToken, options)
+          .json(
+            response(true, "Access token refreshed", {
+              accessToken,
+              refreshToken,
+            })
+          );
+      }
+    } catch (err) {
+      const error = createHttpError(401, "Refresh token is missing or expired");
+      return next(error);
+    }
+  }
 );
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email } = req.query;
@@ -153,7 +199,7 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
       }
     }
 
-    users = await userModel.find(query);
+    users = await userModel.find(query).select("-password -refreshToken");
 
     if (!users || users.length === 0) {
       return res.status(200).json(response(false, "No users found", []));
