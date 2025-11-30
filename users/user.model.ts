@@ -11,7 +11,9 @@ const userSchema = new mongoose.Schema<User>(
     },
     password: {
       type: String,
-      require: [true, "Password is required"],
+      required: function () {
+        return this.provider === "local"; // only required for local users
+      },
       trim: true,
     },
     email: {
@@ -21,6 +23,7 @@ const userSchema = new mongoose.Schema<User>(
     provider: {
       type: String,
       enum: ["local", "google"],
+      default: "local",
     },
     googleId: {
       type: String,
@@ -44,7 +47,7 @@ const userSchema = new mongoose.Schema<User>(
   { timestamps: true }
 );
 userSchema.pre("save", async function (this: User, next) {
-  if (!this.isModified("password")) {
+  if (!this.isModified("password") || this.provider !== "local") {
     return next();
   } else {
     this.password = await bcrypt.hash(this.password, 10);
@@ -56,6 +59,7 @@ userSchema.methods.isPasswordCorrect = async function (password: string) {
     return bcrypt.compare(password, this.password);
   } catch (error) {
     console.error("An error occurred:", error);
+    return false;
   }
 };
 userSchema.methods.generateAccesstoken = async function () {

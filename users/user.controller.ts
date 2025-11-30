@@ -8,6 +8,8 @@ import { options } from "../constant.js";
 import { CustomRequest } from "../types.js";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { config } from "../config/config.js";
+import { oauth2Client } from "../config/google.config.js";
+import axios from "axios";
 const generateAccessAndRefreshToken = async (
   userId: string,
   next: NextFunction
@@ -89,10 +91,12 @@ export const loginUser = asyncHandler(
       const error = createHttpError(400, "User is not active");
       return next(error);
     }
-    const isPasswordValid = await user.isPasswordCorrect(password);
-    if (!isPasswordValid) {
-      const error = createHttpError(400, "Invalid Credentials");
-      return next(error);
+    if (user?.provider === "local") {
+      const isPasswordValid = await user.isPasswordCorrect(password);
+      if (!isPasswordValid) {
+        const error = createHttpError(400, "Invalid Credentials");
+        return next(error);
+      }
     }
     const token = await generateAccessAndRefreshToken(user?._id, next);
     if (token) {
@@ -204,7 +208,6 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
     if (!users || users.length === 0) {
       return res.status(200).json(response(false, "No users found", []));
     }
-    res.status(201).json(response(true, "User Found Successfully", users));
   } else {
     users = await userModel.find({}).select("-password -refreshToken");
     return res
@@ -212,3 +215,108 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
       .json(response(true, "All users fetched successfully", users));
   }
 });
+export const googleLogin = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { data = "" } = req.body;
+    if (!data) {
+      const error = createHttpError(400, "Token is not provided");
+      return next(error);
+    }
+    const googleRes = await oauth2Client.getToken(data);
+
+    oauth2Client.setCredentials(googleRes.tokens);
+    let userRes;
+    try {
+      userRes = await axios.get(
+        `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
+      );
+    } catch (error) {
+      const err = createHttpError(400, "Something went wrong");
+      return next(err);
+    }
+    if (userRes) {
+      const {
+        id = "",
+        email = "",
+        verified_email = "",
+        name = "",
+        given_name = "",
+        family_name = "",
+        picture = "",
+      } = userRes?.data;
+      if ([email, name, picture].some((field) => field?.trim() === "")) {
+        const error = createHttpError(400, "All Feilds are required");
+        return next(error);
+      }
+      if (!name || !email || !picture) {
+        const error = createHttpError(400, "All Feilds are required");
+        return next(error);
+      }
+      if (!emailRegex.test(email)) {
+        const error = createHttpError(400, "Please enter valid email");
+        return next(error);
+      }
+      const userEmail = await userModel.findOne({ email: email });
+      if (userEmail) {
+        const error = createHttpError(
+          400,
+          "Email already exist please try different email"
+        );
+        return next(error);
+      }
+      const user = await userModel.create({
+        fullName: name,
+        email: email,
+        provider: "google",
+        avatar: picture,
+        googleId: id,
+      });
+      const createdUser = await userModel
+        .findById(user?.id)
+        .select("-password -refreshtoken");
+      if (!createdUser) {
+        const error = createHttpError(
+          500,
+          "Something went wrong please try again"
+        );
+        return next(error);
+      }
+      if (!createdUser?.email) {
+        const error = createHttpError(400, "Email is not valid");
+        return next(error);
+      }
+      const checkingUser = await userModel.findOne({
+        email: createdUser?.email,
+      });
+      if (!checkingUser) {
+        const error = createHttpError(400, "User does not exist");
+        return next(error);
+      }
+      if (!checkingUser?.isActive) {
+        const error = createHttpError(400, "User is not active");
+        return next(error);
+      }
+      const token = await generateAccessAndRefreshToken(user?._id, next);
+      if (token) {
+        const { accessToken, refreshToken } = token;
+        const loggedinUser = await userModel
+          .findById(user?._id)
+          .select("-password -refreshToken");
+        res
+          .status(200)
+          .cookie("accessToken", accessToken, options)
+          .cookie("refreshToken", refreshToken)
+          .json(
+            response(true, "User logged in successfully", {
+              userDetails: loggedinUser,
+              accessToken,
+              refreshToken,
+            })
+          );
+      } else {
+        const error = createHttpError(400, "Something went wrong.");
+        return next(error);
+      }
+    }
+  }
+);
