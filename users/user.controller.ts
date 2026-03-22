@@ -12,7 +12,7 @@ import { oauth2Client } from "../config/google.config.js";
 import axios from "axios";
 const generateAccessAndRefreshToken = async (
   userId: string,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const user = await userModel.findById(userId);
@@ -26,7 +26,7 @@ const generateAccessAndRefreshToken = async (
   } catch (err) {
     const error = createHttpError(
       500,
-      "Something went wrong while generating token"
+      "Something went wrong while generating token",
     );
     return next(error);
   }
@@ -34,7 +34,7 @@ const generateAccessAndRefreshToken = async (
 export const registerUser = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { fullName = "", email = "", password = "", provider = "" } = req.body;
   if (
@@ -55,7 +55,7 @@ export const registerUser = async (
   if (userEmail) {
     const error = createHttpError(
       400,
-      "Email already exist please try different email"
+      "Email already exist please try different email",
     );
     return next(error);
   }
@@ -102,7 +102,7 @@ export const loginUser = asyncHandler(
     if (token) {
       const { accessToken, refreshToken } = token;
       const loggedinUser = await userModel
-        .findById(user?._id)
+        .findById(user._id)
         .select("-password -refreshToken");
       res
         .status(200)
@@ -113,13 +113,13 @@ export const loginUser = asyncHandler(
             userDetails: loggedinUser,
             accessToken,
             refreshToken,
-          })
+          }),
         );
     } else {
       const error = createHttpError(400, "Something went wrong.");
       return next(error);
     }
-  }
+  },
 );
 export const logoutUser = asyncHandler(
   async (req: CustomRequest, res: Response) => {
@@ -128,7 +128,7 @@ export const logoutUser = asyncHandler(
       {
         $set: { refreshtoken: undefined },
       },
-      { new: true }
+      { new: true },
     );
     const options = {
       httpOnly: true,
@@ -139,7 +139,7 @@ export const logoutUser = asyncHandler(
       .clearCookie("accessToken", options)
       .clearCookie("refreshToken", options)
       .json(response(true, "User Logged Out", {}));
-  }
+  },
 );
 export const refreshAccessToken = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -154,7 +154,7 @@ export const refreshAccessToken = asyncHandler(
 
       decodedToken = jwt.verify(
         incomingRefreshToken,
-        config?.REFRESH_TOKEN_SECRETE
+        config?.REFRESH_TOKEN_SECRETE,
       ) as JwtPayload;
 
       const user = await userModel
@@ -179,14 +179,14 @@ export const refreshAccessToken = asyncHandler(
             response(true, "Access token refreshed", {
               accessToken,
               refreshToken,
-            })
+            }),
           );
       }
     } catch (err) {
       const error = createHttpError(401, "Refresh token is missing or expired");
       return next(error);
     }
-  }
+  },
 );
 export const getUsers = asyncHandler(async (req: Request, res: Response) => {
   const { fullName, email } = req.query;
@@ -228,7 +228,7 @@ export const googleLogin = asyncHandler(
     let userRes;
     try {
       userRes = await axios.get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`
+        `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${googleRes.tokens.access_token}`,
       );
     } catch (error) {
       const err = createHttpError(400, "Something went wrong");
@@ -260,7 +260,7 @@ export const googleLogin = asyncHandler(
       if (userEmail) {
         const error = createHttpError(
           400,
-          "Email already exist please try different email"
+          "Email already exist please try different email",
         );
         return next(error);
       }
@@ -277,7 +277,7 @@ export const googleLogin = asyncHandler(
       if (!createdUser) {
         const error = createHttpError(
           500,
-          "Something went wrong please try again"
+          "Something went wrong please try again",
         );
         return next(error);
       }
@@ -311,12 +311,12 @@ export const googleLogin = asyncHandler(
               userDetails: loggedinUser,
               accessToken,
               refreshToken,
-            })
+            }),
           );
       } else {
         const error = createHttpError(400, "Something went wrong.");
         return next(error);
       }
     }
-  }
+  },
 );

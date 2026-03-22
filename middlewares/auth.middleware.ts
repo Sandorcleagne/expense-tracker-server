@@ -20,11 +20,14 @@ export const verifyJwt = asyncHandler(
       try {
         decodedToken = jwt.verify(
           incomingToken,
-          config?.ACCESS_TOKEN_SECRETE
+          config?.ACCESS_TOKEN_SECRETE,
         ) as JwtPayload;
       } catch (err) {
         const error = createHttpError(403, "token is expired");
-        next(error);
+        return next(error);
+      }
+      if (!decodedToken?._id) {
+        return next(createHttpError(401, "Invalid token"));
       }
       const user = await userModel
         .findById(decodedToken?._id)
@@ -39,5 +42,5 @@ export const verifyJwt = asyncHandler(
       const error = createHttpError(400, "Something went wrong.");
       return next(error);
     }
-  }
+  },
 );

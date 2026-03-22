@@ -11,6 +11,8 @@ export interface User extends Document {
   isVerified: boolean;
   isActive: boolean;
   refreshToken: string;
+  createdAt: Date;
+  updatedAt: Date;
   isPasswordCorrect(password: string): Promise<boolean>;
   generateAccesstoken(): Promise<string>;
   generateRefreshToken(): Promise<string>;
