@@ -7,9 +7,7 @@ import { accountModel } from "./accounts.model.js";
 
 export const createAccount = asyncHandler(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
-    console.log("calling...");
     const { name = "", type = "", balance = 0, isDefault = false } = req.body;
-    console.log("req.body", req.body);
     if ([name, type].some((field) => field?.trim() === "")) {
       const error = createHttpError(400, "All Feilds are required");
       return next(error);
