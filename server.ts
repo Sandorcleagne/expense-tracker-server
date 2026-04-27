@@ -6,6 +6,7 @@ import userRouter from "./users/user.router.js";
 import globalErrorHandler from "./middlewares/errorhandler.middleware.js";
 import accountRouter from "./accounts/accounts.router.js";
 import budgetRouter from "./budgets/budgets.router.js";
+import transactionRouter from "./transactions/transaction.router.js";
 const app = express();
 app.use(cookieParser());
 app.use(express.json({ limit: "40kb" }));
@@ -23,6 +24,7 @@ app.get("/api/v1", (req: Request, res: Response) => {
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/accounts", accountRouter);
 app.use("/api/v1/budgets", budgetRouter);
+app.use("/api/v1/transactions", transactionRouter);
 app.use(globalErrorHandler);
 
 connectDB()

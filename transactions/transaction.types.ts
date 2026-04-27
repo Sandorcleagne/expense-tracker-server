@@ -1,10 +1,10 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 export interface Transaction extends Document {
   _id: string;
   type: string;
-  userId: string;
+  userId: Types.ObjectId;
   amount: number;
-  accountId: string;
+  accountId: Types.ObjectId;
   description: string;
   category: string;
   receiptUrl: string;

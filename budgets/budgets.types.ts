@@ -1,9 +1,12 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 export interface Budget extends Document {
   _id: string;
   amount: number;
-  userId: string;
+  spent: number;
+  type: string;
+  userId: Types.ObjectId;
   lastAlertSent: Date;
+  lastAlertLevel: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

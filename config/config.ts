@@ -14,6 +14,10 @@ const _config = {
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
   GOOGLE_CALLBACK_URL: process.env.GOOGLE_CALLBACK_URL || "",
+  SMTP_HOST: process.env.SMTP_HOST || "",
+  SMTP_PORT: process.env.SMTP_PORT || "587",
+  SMTP_USER: process.env.SMTP_USER || "",
+  SMTP_PASS: process.env.SMTP_PASS || "",
 };
 
 export const config = Object.freeze(_config);

@@ -36,14 +36,14 @@ export const registerUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { fullName = "", email = "", password = "", provider = "" } = req.body;
+  const { fullName = "", email = "", password = ""} = req.body;
   if (
-    [fullName, email, password, provider].some((field) => field?.trim() === "")
+    [fullName, email, password].some((field) => field?.trim() === "")
   ) {
     const error = createHttpError(400, "All Feilds are required");
     return next(error);
   }
-  if (!fullName || !password || !email || !provider) {
+  if (!fullName || !password || !email) {
     const error = createHttpError(400, "All Feilds are required");
     return next(error);
   }
@@ -318,5 +318,42 @@ export const googleLogin = asyncHandler(
         return next(error);
       }
     }
+  },
+);
+export const updateUser = asyncHandler(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const { fullName, email, avatar } = req.body;
+
+    // Reject if no fields are provided at all
+    if (!fullName && !email && !avatar) {
+      const error = createHttpError(400, "At least one field is required");
+      return next(error);
+    }
+
+    // Build update object with only provided fields
+    const updateFields: Partial<{
+      fullName: string;
+      email: string;
+      avatar: string;
+    }> = {};
+    if (fullName) updateFields.fullName = fullName;
+    if (email) updateFields.email = email;
+    if (avatar) updateFields.avatar = avatar;
+
+    const user = await userModel.findByIdAndUpdate(
+      req.user?._id,
+      { $set: updateFields },
+      { new: true },
+    );
+
+    if (!user) {
+      const error = createHttpError(
+        500,
+        "Something went wrong please try again",
+      );
+      return next(error);
+    }
+
+    res.status(200).json(response(true, "User updated successfully", user));
   },
 );

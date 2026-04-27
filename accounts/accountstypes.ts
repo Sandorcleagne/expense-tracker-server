@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 
 export interface Account extends Document {
   _id: string;
@@ -6,7 +6,7 @@ export interface Account extends Document {
   type: string;
   balance: number;
   isDefault: boolean;
-  userId: string;
+  userId: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

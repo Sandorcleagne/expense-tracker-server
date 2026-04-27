@@ -5,60 +5,74 @@ const transactionSchema = new mongoose.Schema<Transaction>(
   {
     type: {
       type: String,
-      required: true,
-      trim: true,
       enum: ["INCOME", "EXPENSE"],
-    },
-    userId: {
-      type: String,
       required: true,
     },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    accountId: {
-      type: String,
-      required: true,
-    },
-    description: {
-      type: String,
-      required: true,
-    },
+
+    amount: { type: Number, required: true },
+
+    description: { type: String, required: true },
     category: {
       type: String,
+      enum: [
+        "FOOD",
+        "RENT",
+        "TRAVEL",
+        "SHOPPING",
+        "ENTERTAINMENT",
+        "BILLS",
+        "HEALTH",
+        "SALARY",
+        "FREELANCE",
+        "INVESTMENT",
+        "LOAN",
+        "GIFT",
+        "OTHER",
+      ],
       required: true,
     },
-    receiptUrl: {
-      type: String,
-      required: true,
-    },
-    isRecurring: {
-      type: Boolean,
-      required: true,
-    },
-    recurringInterval: {
-      type: String,
-      required: true,
-      enum: ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"],
-    },
-    nextRecurringDate: {
-      type: Date,
-      required: true,
-    },
-    lastProcessedDate: {
-      type: Date,
-      required: true,
-    },
+
+    receiptUrl: String,
+
     status: {
       type: String,
-      required: true,
       enum: ["PENDING", "COMPLETED", "CANCELLED"],
+      default: "COMPLETED",
     },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    accountId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Account",
+      required: true,
+    },
+    isRecurring: { type: Boolean, default: false },
+
+    recurringInterval: {
+      type: String,
+      enum: ["DAILY", "WEEKLY", "MONTHLY", "YEARLY"],
+      required: function () {
+        return this.isRecurring;
+      },
+    },
+
+    nextRecurringDate: {
+      type: Date,
+      required: function () {
+        return this.isRecurring;
+      },
+    },
+
+    lastProcessedDate: Date,
   },
   { timestamps: true },
 );
-
+transactionSchema.index({ userId: 1, createdAt: -1 });
+transactionSchema.index({ nextRecurringDate: 1 });
 export const transactionModel = mongoose.model<Transaction>(
   "Transaction",
   transactionSchema,

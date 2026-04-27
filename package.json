@@ -25,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.18.2",
     "multer": "^2.0.2",
+    "nodemailer": "^8.0.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -39,6 +40,7 @@
     "@types/mongoose": "^5.11.97",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.5.2",
+    "@types/nodemailer": "^8.0.0",
     "eslint": "^9.36.0",
     "globals": "^16.4.0",
     "nodemon": "^3.1.10",
