@@ -10,7 +10,7 @@ import transactionRouter from "./transactions/transaction.router.js";
 const app = express();
 app.use(cookieParser());
 app.use(express.json({ limit: "40kb" }));
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.urlencoded({ extended: true, limit: "40kb" }));
 app.use(express.static("public"));
 

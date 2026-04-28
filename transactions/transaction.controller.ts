@@ -212,7 +212,6 @@ export const getAllTransactions = asyncHandler(
     let query: any = { userId: req.user?._id };
     if (type) query.type = type;
     if (status) query.status = status;
-    console.log(query);
     const transactions = await transactionModel
       .find(query)
       .limit(Number(limit))
