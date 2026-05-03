@@ -13,6 +13,7 @@ export interface Transaction extends Document {
   nextRecurringDate: Date;
   lastProcessedDate: Date;
   status: string;
+  transactionDate: Date;
   createdAt: Date;
   updatedAt: Date;
 }

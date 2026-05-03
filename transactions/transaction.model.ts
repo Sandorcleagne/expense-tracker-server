@@ -44,7 +44,11 @@ const transactionSchema = new mongoose.Schema<Transaction>(
       ref: "User",
       required: true,
     },
-
+    transactionDate: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
     accountId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Account",

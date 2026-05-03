@@ -26,6 +26,7 @@ export const createTransaction = asyncHandler(
       nextRecurringDate = null,
       lastProcessedDate = null,
       status,
+      transactionDate, // "YYYY-MM-DD"
     } = req.body;
     if (
       !type ||
@@ -33,7 +34,8 @@ export const createTransaction = asyncHandler(
       !accountId ||
       !description ||
       !category ||
-      !status
+      !status ||
+      !transactionDate
     ) {
       const error = createHttpError(400, "All fields are required");
       return next(error);
@@ -52,6 +54,13 @@ export const createTransaction = asyncHandler(
     }
     if (!account.userId.equals(req.user._id)) {
       const error = createHttpError(403, "Unauthorized");
+      return next(error);
+    }
+    if (new Date(transactionDate) > new Date()) {
+      const error = createHttpError(
+        400,
+        "Transaction date cannot be in the future",
+      );
       return next(error);
     }
     const modifiedType = req.body.type.toUpperCase();
