@@ -36,10 +36,8 @@ export const registerUser = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { fullName = "", email = "", password = ""} = req.body;
-  if (
-    [fullName, email, password].some((field) => field?.trim() === "")
-  ) {
+  const { fullName = "", email = "", password = "" } = req.body;
+  if ([fullName, email, password].some((field) => field?.trim() === "")) {
     const error = createHttpError(400, "All Feilds are required");
     return next(error);
   }
@@ -107,7 +105,7 @@ export const loginUser = asyncHandler(
       res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken)
+        .cookie("refreshToken", refreshToken, options)
         .json(
           response(true, "User logged in successfully", {
             userDetails: loggedinUser,
