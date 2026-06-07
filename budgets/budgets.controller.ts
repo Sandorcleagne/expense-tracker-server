@@ -25,7 +25,10 @@ export const createBudget = asyncHandler(
       userId: req.user?._id,
     });
     if (existingBudget) {
-      const error = createHttpError(400, "Budget already exists, each user can only have one budget");
+      const error = createHttpError(
+        400,
+        "Budget already exists, each user can only have one budget",
+      );
       return next(error);
     }
     const budget = await budgetModel.create({

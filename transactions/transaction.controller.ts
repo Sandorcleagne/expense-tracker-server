@@ -228,7 +228,12 @@ export const getAllTransactions = asyncHandler(
       .sort({ createdAt: -1 });
     const totalCount = await transactionModel.countDocuments(query);
     if (!transactions || totalCount === 0) {
-      return res.status(200).json(response(true, "No Transactions found", {}));
+      return res.status(200).json(
+        response(true, "No Transactions found", {
+          totalCount: 0,
+          transactions: [],
+        }),
+      );
     }
     res.status(200).json(
       response(true, "Transactions fetched successfully", {
