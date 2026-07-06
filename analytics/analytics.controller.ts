@@ -44,13 +44,19 @@ export const getDashboardSummary = asyncHandler(
       },
       {
         $facet: {
-          income: [{ $match: { type: "INCOME" } }],
-          expense: [{ $match: { type: "EXPENSE" } }],
+          income: [
+            { $match: { type: "INCOME" } },
+            { $group: { _id: null, total: { $sum: "$amount" } } },
+          ],
+          expense: [
+            { $match: { type: "EXPENSE" } },
+            { $group: { _id: null, total: { $sum: "$amount" } } },
+          ],
         },
       },
     ]);
     const curIncome = currentMonthStats?.[0]?.income?.[0]?.total ?? 0;
-    const curExpenses = currentMonthStats?.[0]?.expenses?.[0]?.total ?? 0;
+    const curExpenses = currentMonthStats?.[0]?.expense?.[0]?.total ?? 0;
     const curSavings = curIncome - curExpenses;
     //Previous month stats for % change calculation
     const prevMonthStats = await transactionModel.aggregate([
