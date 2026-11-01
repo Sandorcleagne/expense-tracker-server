@@ -30,7 +30,7 @@ export const getDashboardSummary = asyncHandler(
       prevMonth,
     );
     const balanceResult = await accountModel.aggregate([
-      { $match: { userId: userId } },
+      { $match: { userId: userId, isDeleted: false } },
       { $group: { _id: null, total: { $sum: "$balance" } } }, // we use null here because we do not want to group according something just give the toal of matched documents.
     ]);
     const totalBalance = balanceResult?.[0]?.total ?? 0;

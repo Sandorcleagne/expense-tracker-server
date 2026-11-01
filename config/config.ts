@@ -3,6 +3,7 @@ conf();
 const _config = {
   port: process.env.PORT,
   database_URI: process.env.DATABASE_URI,
+  connection_params: process.env.CONNECTION_PARAMS,
   env: process.env.NODE_ENV,
   ACCESS_TOKEN_SECRETE: process.env.ACCESS_TOKEN_SECRETE || "",
   REFRESH_TOKEN_SECRETE: process.env.REFRESH_TOKEN_SECRETE || "",

@@ -7,6 +7,10 @@ export interface Account extends Document {
   balance: number;
   isDefault: boolean;
   userId: Types.ObjectId;
+  isDeleted: boolean;
+  bankCode: string;
+  accountNumberLast4: string;
+  deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
